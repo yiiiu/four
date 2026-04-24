@@ -1,0 +1,8 @@
+build/
+dist/
+__pycache__/
+*.pyc
+output_tiles/
+shots_out/
+*.spec.bak
+.pytest_cache/
