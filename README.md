@@ -25,4 +25,4 @@ pyinstaller 四宫格九宫格拆分工具Pro.spec
 ## 说明
 
 - `grid_splitter_gui.py` 和 `gui_splitter.py` 是旧版本入口。
-- `gui_splitter_plus_copy.py` 是实验版本，包含镜头表生成功能，当前未纳入正式打包入口。
+- `experimental/gui_splitter_plus_copy.py` 是实验版本，包含镜头表生成功能，当前未纳入正式打包入口。

@@ -61,3 +61,11 @@ def test_worker_split_accepts_config_snapshot():
 def test_output_format_copy_mentions_jpg_reencoding():
     source = (ROOT / "gui_splitter_plus.py").read_text(encoding="utf-8")
     assert "JPG会重新编码" in source or "JPG 会重新编码" in source
+
+
+def test_experimental_shot_table_version_is_archived():
+    assert not (ROOT / "gui_splitter_plus_copy.py").exists()
+    assert (ROOT / "experimental" / "gui_splitter_plus_copy.py").exists()
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "experimental/gui_splitter_plus_copy.py" in readme
