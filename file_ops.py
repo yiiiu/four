@@ -42,6 +42,33 @@ def needs_typed_delete_confirmation(file_count: int) -> bool:
     return file_count >= DELETE_CONFIRM_THRESHOLD
 
 
+def format_split_summary(
+    ok: int,
+    fail: int,
+    output_count: int,
+    outdir: Path,
+    failures: list[tuple[str, str]],
+) -> tuple[str, str, str]:
+    output_dir = outdir.resolve()
+    status = f"完成：成功 {ok}，失败 {fail}，输出 {output_count} 张切片。输出目录：{output_dir}"
+    dialog_lines = [
+        f"成功 {ok}，失败 {fail}",
+        f"输出切片：{output_count} 张",
+        f"输出目录：{output_dir}",
+    ]
+    log_lines = [f"■ 完成：成功 {ok}，失败 {fail}，输出 {output_count} 张切片"]
+
+    if failures:
+        shown = failures[:5]
+        dialog_lines.extend(["", "失败文件："])
+        dialog_lines.extend(f"{name}：{error}" for name, error in shown)
+        if len(failures) > len(shown):
+            dialog_lines.append(f"... 另有 {len(failures) - len(shown)} 个失败")
+        log_lines.extend(f"失败文件：{name}：{error}" for name, error in shown)
+
+    return status, "\n".join(dialog_lines), "\n".join(log_lines)
+
+
 def get_output_dir_for_image(
     image_path: Path,
     output_root: Path,

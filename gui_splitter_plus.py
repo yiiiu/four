@@ -12,6 +12,7 @@ from file_ops import (
     delete_files,
     delete_images_in_dir,
     estimate_output_count,
+    format_split_summary,
     get_output_dir_for_image,
     is_dangerous_delete_target,
     needs_typed_delete_confirmation,
@@ -778,6 +779,8 @@ class App(tk.Tk):
     ):
         ok = 0
         fail = 0
+        output_count = 0
+        failures: list[tuple[str, str]] = []
         out_dir_path = Path(outdir)
         out_dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -808,14 +811,16 @@ class App(tk.Tk):
 
                         unique_stem = make_unique_stem(output_dir, raw_stem, ext)
                         save_tile(tile, output_dir / unique_stem, out_mode, src_ext)
+                        output_count += 1
 
                 ok += 1
                 self._ui_progress(idx, f"✅ {img_path.name} -> {g}x{g} 完成")
             except Exception as e:
                 fail += 1
+                failures.append((img_path.name, str(e)))
                 self._ui_progress(idx, f"❌ {img_path.name} 失败：{e}")
 
-        self._ui_done(ok, fail, outdir)
+        self._ui_done(ok, fail, output_count, outdir, failures)
 
     def _ui_progress(self, value: int, logmsg: str):
         def _():
@@ -823,11 +828,12 @@ class App(tk.Tk):
             self._log(logmsg)
         self.after(0, _)
 
-    def _ui_done(self, ok: int, fail: int, outdir: str):
+    def _ui_done(self, ok: int, fail: int, output_count: int, outdir: str, failures: list[tuple[str, str]]):
         def _():
-            self.status.set(f"完成：成功 {ok}，失败 {fail}。输出目录：{Path(outdir).resolve()}")
-            self._log(f"■ 完成：成功 {ok}，失败 {fail}")
-            messagebox.showinfo("完成", f"成功 {ok}，失败 {fail}\n输出目录：{Path(outdir).resolve()}")
+            status, dialog, log = format_split_summary(ok, fail, output_count, Path(outdir), failures)
+            self.status.set(status)
+            self._log(log)
+            messagebox.showinfo("完成", dialog)
         self.after(0, _)
 
     # ---------------- Delete Panel (A: list left, preview right) ----------------

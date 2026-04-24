@@ -6,6 +6,7 @@ from file_ops import (
     DELETE_CONFIRM_THRESHOLD,
     DELETE_CONFIRM_TEXT,
     estimate_output_count,
+    format_split_summary,
     get_output_dir_for_image,
     is_dangerous_delete_target,
     needs_typed_delete_confirmation,
@@ -80,3 +81,41 @@ def test_large_delete_confirmation_policy():
     assert needs_typed_delete_confirmation(DELETE_CONFIRM_THRESHOLD - 1) is False
     assert needs_typed_delete_confirmation(DELETE_CONFIRM_THRESHOLD) is True
     assert needs_typed_delete_confirmation(DELETE_CONFIRM_THRESHOLD + 1) is True
+
+
+def test_split_summary_without_failures(tmp_path):
+    status, dialog, log = format_split_summary(
+        ok=2,
+        fail=0,
+        output_count=18,
+        outdir=tmp_path / "output",
+        failures=[],
+    )
+
+    assert "成功 2" in status
+    assert "失败 0" in status
+    assert "输出 18 张切片" in status
+    assert str((tmp_path / "output").resolve()) in status
+    assert "成功 2" in dialog
+    assert "输出切片：18 张" in dialog
+    assert "失败文件" not in dialog
+    assert log == "■ 完成：成功 2，失败 0，输出 18 张切片"
+
+
+def test_split_summary_lists_failures(tmp_path):
+    failures = [(f"bad-{i}.jpg", f"错误 {i}") for i in range(1, 7)]
+
+    _, dialog, log = format_split_summary(
+        ok=1,
+        fail=6,
+        output_count=9,
+        outdir=tmp_path / "output",
+        failures=failures,
+    )
+
+    assert "失败文件：" in dialog
+    assert "bad-1.jpg：错误 1" in dialog
+    assert "bad-5.jpg：错误 5" in dialog
+    assert "bad-6.jpg" not in dialog
+    assert "另有 1 个失败" in dialog
+    assert "失败文件：bad-1.jpg：错误 1" in log
