@@ -2,17 +2,19 @@ import threading
 from pathlib import Path
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, colorchooser
+from tkinter import ttk, filedialog, messagebox, colorchooser, simpledialog
 
 from PIL import Image, ImageTk
 
 from file_ops import (
     HAS_SEND2TRASH,
+    DELETE_CONFIRM_TEXT,
     delete_files,
     delete_images_in_dir,
     estimate_output_count,
     get_output_dir_for_image,
     is_dangerous_delete_target,
+    needs_typed_delete_confirmation,
     open_folder,
 )
 from image_splitter import (
@@ -990,6 +992,16 @@ class App(tk.Tk):
                 return False
             return True
 
+        def _confirm_large_delete(file_count: int) -> bool:
+            if not needs_typed_delete_confirmation(file_count):
+                return True
+            answer = simpledialog.askstring(
+                "大量删除确认",
+                f"将删除 {file_count} 张图片。为避免误删，请输入 {DELETE_CONFIRM_TEXT} 继续。",
+                parent=win,
+            )
+            return answer == DELETE_CONFIRM_TEXT
+
         def delete_selected():
             sel = list(lb.curselection())
             if not sel:
@@ -1013,6 +1025,9 @@ class App(tk.Tk):
                 parent=win
             )
             if not ok:
+                return
+            if not _confirm_large_delete(len(sel)):
+                messagebox.showinfo("已取消", "未输入正确确认文本，删除已取消。", parent=win)
                 return
 
             paths = [self._del_list_paths[i] for i in sel if 0 <= i < len(self._del_list_paths)]
@@ -1047,6 +1062,9 @@ class App(tk.Tk):
                 parent=win
             )
             if not ok:
+                return
+            if not _confirm_large_delete(count):
+                messagebox.showinfo("已取消", "未输入正确确认文本，删除已取消。", parent=win)
                 return
 
             deleted = delete_images_in_dir(target, recursive_var.get(), use_trash=use_trash_var.get())

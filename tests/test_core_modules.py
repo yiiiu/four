@@ -2,7 +2,15 @@ from pathlib import Path
 
 from PIL import Image
 
-from file_ops import estimate_output_count, get_output_dir_for_image, is_dangerous_delete_target, open_folder
+from file_ops import (
+    DELETE_CONFIRM_THRESHOLD,
+    DELETE_CONFIRM_TEXT,
+    estimate_output_count,
+    get_output_dir_for_image,
+    is_dangerous_delete_target,
+    needs_typed_delete_confirmation,
+    open_folder,
+)
 from image_splitter import guess_grid_by_ratio, is_image_file, make_unique_stem, split_equal_grid
 
 
@@ -65,3 +73,10 @@ def test_output_dir_planning_ignores_structure_for_single_file(tmp_path):
     output_root = tmp_path / "output"
 
     assert get_output_dir_for_image(image_path, output_root, None, preserve_structure=True) == output_root
+
+
+def test_large_delete_confirmation_policy():
+    assert DELETE_CONFIRM_TEXT == "DELETE"
+    assert needs_typed_delete_confirmation(DELETE_CONFIRM_THRESHOLD - 1) is False
+    assert needs_typed_delete_confirmation(DELETE_CONFIRM_THRESHOLD) is True
+    assert needs_typed_delete_confirmation(DELETE_CONFIRM_THRESHOLD + 1) is True

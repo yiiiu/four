@@ -11,6 +11,10 @@ except Exception:
 from image_splitter import is_image_file
 
 
+DELETE_CONFIRM_THRESHOLD = 50
+DELETE_CONFIRM_TEXT = "DELETE"
+
+
 def open_folder(path: str, launch: bool = True):
     try:
         target = Path(path)
@@ -32,6 +36,10 @@ def estimate_output_count(input_count: int, grid_mode: str) -> int | None:
         grid = int(grid_mode)
         return input_count * grid * grid
     return None
+
+
+def needs_typed_delete_confirmation(file_count: int) -> bool:
+    return file_count >= DELETE_CONFIRM_THRESHOLD
 
 
 def get_output_dir_for_image(
