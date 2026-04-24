@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['gui_splitter_plus.py'],
+    ['main.py'],
     pathex=[],
     binaries=[],
     datas=[],
