@@ -39,7 +39,7 @@ from image_splitter import (
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("四宫格/九宫格 拆分工具 Pro（无损裁切）")
+        self.title("四宫格/九宫格图片拆分工具")
         self.geometry("1150x700")
         self.minsize(1050, 650)
         self.use_trash_default = tk.BooleanVar(value=True)
@@ -68,7 +68,7 @@ class App(tk.Tk):
 
         self._build_ui()
         self.apply_theme()
-        self._log("就绪：请选择输入。")
+        self._log("准备好了，请先选择图片或文件夹。")
         self._sync_input_ui()
 
     # ---------------- UI Layout ----------------
@@ -119,36 +119,36 @@ class App(tk.Tk):
         trow.grid(row=0, column=0, sticky="ew")
         ttk.Radiobutton(trow, text="单张图片", variable=self.input_type, value="single",
                         command=self._sync_input_ui).pack(side="left")
-        ttk.Radiobutton(trow, text="文件夹批量", variable=self.input_type, value="folder",
+        ttk.Radiobutton(trow, text="批量处理文件夹", variable=self.input_type, value="folder",
                         command=self._sync_input_ui).pack(side="left", padx=12)
 
-        ttk.Label(lf_in, text="输入路径").grid(row=1, column=0, sticky="w", pady=(10, 4))
+        ttk.Label(lf_in, text="图片或文件夹").grid(row=1, column=0, sticky="w", pady=(10, 4))
         in_row = ttk.Frame(lf_in)
         in_row.grid(row=2, column=0, sticky="ew")
         in_row.columnconfigure(0, weight=1)
         ttk.Entry(in_row, textvariable=self.input_path).grid(row=0, column=0, sticky="ew")
         ttk.Button(in_row, text="选择…", command=self.pick_input, width=10).grid(row=0, column=1, padx=(8, 0))
 
-        lf_out = ttk.LabelFrame(left, text="输出", padding=10,style="Card.TLabelframe")
+        lf_out = ttk.LabelFrame(left, text="保存位置", padding=10,style="Card.TLabelframe")
         lf_out.grid(row=1, column=0, sticky="ew", pady=(0, 10))
         lf_out.columnconfigure(0, weight=1)
 
-        ttk.Label(lf_out, text="输出目录").grid(row=0, column=0, sticky="w", pady=(0, 4))
+        ttk.Label(lf_out, text="保存到").grid(row=0, column=0, sticky="w", pady=(0, 4))
         out_row = ttk.Frame(lf_out)
         out_row.grid(row=1, column=0, sticky="ew")
         out_row.columnconfigure(0, weight=1)
         ttk.Entry(out_row, textvariable=self.outdir).grid(row=0, column=0, sticky="ew")
         ttk.Button(out_row, text="选择…", command=self.pick_outdir, width=10).grid(row=0, column=1, padx=(8, 0))
-        ttk.Checkbutton(lf_out, text="批量输出保留子目录结构", variable=self.preserve_structure).grid(row=2, column=0, sticky="w", pady=(8, 0))
+        ttk.Checkbutton(lf_out, text="按原文件夹结构保存", variable=self.preserve_structure).grid(row=2, column=0, sticky="w", pady=(8, 0))
 
-        lf_opts = ttk.LabelFrame(left, text="参数", padding=10)
+        lf_opts = ttk.LabelFrame(left, text="拆分设置", padding=10)
         lf_opts.grid(row=2, column=0, sticky="ew", pady=(0, 10))
         lf_opts.columnconfigure(0, weight=1)
 
-        ttk.Label(lf_opts, text="网格模式").grid(row=0, column=0, sticky="w")
+        ttk.Label(lf_opts, text="拆分方式").grid(row=0, column=0, sticky="w")
         gm = ttk.Frame(lf_opts)
         gm.grid(row=1, column=0, sticky="w", pady=(4, 10))
-        ttk.Radiobutton(gm, text="自动", variable=self.grid_mode, value="auto",
+        ttk.Radiobutton(gm, text="自动识别", variable=self.grid_mode, value="auto",
                         command=self.refresh_preview).pack(side="left")
         ttk.Radiobutton(gm, text="2×2", variable=self.grid_mode, value="2",
                         command=self.refresh_preview).pack(side="left", padx=12)
@@ -183,14 +183,14 @@ class App(tk.Tk):
                                     command=self.pick_grid_color)
         self._color_btn.pack(side="left", padx=(12, 0))
 
-        ttk.Label(lf_opts, text="输出格式").grid(row=3, column=0, sticky="w")
+        ttk.Label(lf_opts, text="保存格式").grid(row=3, column=0, sticky="w")
         fmt_row = ttk.Frame(lf_opts)
         fmt_row.grid(row=4, column=0, sticky="ew", pady=(4, 0))
         fmt_row.columnconfigure(1, weight=1)
         fmt = ttk.Combobox(fmt_row, textvariable=self.out_format, values=["png", "webp", "keep"],
                            width=8, state="readonly")
         fmt.grid(row=0, column=0, sticky="w")
-        ttk.Label(fmt_row, text="png/webp无损保存；keep尽量保持原格式，JPG会重新编码", foreground="#666").grid(row=0, column=1, sticky="w", padx=(10, 0))
+        ttk.Label(fmt_row, text="建议选择 PNG；选择“保持原格式”会尽量沿用原图片格式。", foreground="#666").grid(row=0, column=1, sticky="w", padx=(10, 0))
 
         lf_actions = ttk.LabelFrame(left, text="操作", padding=10)
         lf_actions.grid(row=3, column=0, sticky="ew", pady=(0, 10))
@@ -198,13 +198,13 @@ class App(tk.Tk):
 
         btn_row = ttk.Frame(lf_actions)
         btn_row.grid(row=0, column=0, sticky="ew")
-        ttk.Button(btn_row, text="开始拆分", command=self.run_split).pack(side="left")
-        ttk.Button(btn_row, text="打开输出目录", command=lambda: open_folder(self.outdir.get())).pack(side="left", padx=8)
+        ttk.Button(btn_row, text="开始处理", command=self.run_split).pack(side="left")
+        ttk.Button(btn_row, text="打开保存位置", command=lambda: open_folder(self.outdir.get())).pack(side="left", padx=8)
 
         del_row = ttk.Frame(lf_actions)
         del_row.grid(row=1, column=0, sticky="ew", pady=(10, 0))
-        ttk.Button(del_row, text="删除图片（可预览/多选）", command=self.delete_images_ui).pack(side="left")
-        ttk.Checkbutton(del_row, text="递归包含子目录", variable=self.delete_recursive).pack(side="left", padx=10)
+        ttk.Button(del_row, text="清理图片", command=self.delete_images_ui).pack(side="left")
+        ttk.Checkbutton(del_row, text="包含子文件夹", variable=self.delete_recursive).pack(side="left", padx=10)
 
         # progress + status
         self.pbar = ttk.Progressbar(left, mode="determinate",style="Accent.Horizontal.TProgressbar")
@@ -217,8 +217,8 @@ class App(tk.Tk):
         right_paned = ttk.Panedwindow(right, orient="vertical")
         right_paned.pack(fill="both", expand=True)
 
-        prev_frame = ttk.LabelFrame(right_paned, text="预览（叠加网格线）", padding=8)
-        log_frame = ttk.LabelFrame(right_paned, text="日志", padding=8)
+        prev_frame = ttk.LabelFrame(right_paned, text="图片预览", padding=8)
+        log_frame = ttk.LabelFrame(right_paned, text="处理记录", padding=8)
 
         right_paned.add(prev_frame, weight=3)
         right_paned.add(log_frame, weight=1)
@@ -637,8 +637,9 @@ class App(tk.Tk):
         if self.input_type.get() == "single":
             self.status.set("请选择一张四宫格/九宫格图片。")
         else:
-            self.status.set("请选择一个包含图片的文件夹（会递归批量拆分）。")
-        self._log(f"切换输入类型：{self.input_type.get()}")
+            self.status.set("请选择一个包含图片的文件夹。")
+        mode_label = "单张图片" if self.input_type.get() == "single" else "批量处理文件夹"
+        self._log(f"已切换为：{mode_label}")
 
     # ---------------- Pickers ----------------
 
@@ -672,11 +673,11 @@ class App(tk.Tk):
                 else:
                     self._preview_src = None
                     self.canvas.delete("all")
-                    self.status.set("该文件夹内没有找到支持的图片格式。")
-                    self._log("⚠️ 文件夹内未找到图片。")
+                    self.status.set("这个文件夹里没有找到可处理的图片。")
+                    self._log("未找到可处理的图片。")
 
     def pick_outdir(self):
-        p = filedialog.askdirectory(title="选择输出目录")
+        p = filedialog.askdirectory(title="选择保存位置")
         if p:
             self.outdir.set(p)
 
@@ -685,13 +686,13 @@ class App(tk.Tk):
             with Image.open(path) as img:
                 img.load()
                 self._preview_src = img.copy()
-            self._log(f"载入预览：{path}  ({self._preview_src.size[0]}x{self._preview_src.size[1]})")
+            self._log(f"已载入预览：{path}  ({self._preview_src.size[0]}x{self._preview_src.size[1]})")
             self.refresh_preview()
         except Exception as e:
             self._preview_src = None
             self.canvas.delete("all")
-            self.status.set(f"预览失败：{e}")
-            self._log(f"❌ 预览失败：{e}")
+            self.status.set(f"图片预览失败：{e}")
+            self._log(f"图片预览失败：{e}")
 
     # ---------------- Preview ----------------
 
@@ -716,7 +717,7 @@ class App(tk.Tk):
             show_badge=True
         )
 
-        self.status.set(f"预览：{w}×{h} | 网格：{g}×{g} | 输出：{self.out_format.get()}（无损裁切）")
+        self.status.set(f"预览：{w}×{h} | 拆分：{g}×{g} | 保存格式：{self.out_format.get()}")
 
     # ---------------- Split ----------------
 
@@ -725,10 +726,10 @@ class App(tk.Tk):
         outdir = self.outdir.get().strip()
 
         if not in_path:
-            messagebox.showerror("错误", "请先选择输入图片或文件夹。")
+            messagebox.showerror("无法开始", "请先选择一张图片或一个图片文件夹。")
             return
         if not outdir:
-            messagebox.showerror("错误", "请先选择输出目录。")
+            messagebox.showerror("无法开始", "请先选择保存位置。")
             return
 
         tasks: list[Path] = []
@@ -736,17 +737,17 @@ class App(tk.Tk):
         if self.input_type.get() == "single":
             p = Path(in_path)
             if not p.exists() or not p.is_file() or not is_image_file(p):
-                messagebox.showerror("错误", "输入图片无效或格式不支持。")
+                messagebox.showerror("无法开始", "请选择一张可处理的图片。")
                 return
             tasks = [p]
         else:
             folder = Path(in_path)
             if not folder.exists() or not folder.is_dir():
-                messagebox.showerror("错误", "输入文件夹无效。")
+                messagebox.showerror("无法开始", "请选择一个有效的图片文件夹。")
                 return
             tasks = sorted([p for p in folder.rglob("*") if p.is_file() and is_image_file(p)])
             if not tasks:
-                messagebox.showerror("错误", "文件夹内没有找到支持的图片。")
+                messagebox.showerror("无法开始", "这个文件夹里没有找到可处理的图片。")
                 return
             input_root = folder
 
@@ -757,10 +758,10 @@ class App(tk.Tk):
         preserve_structure = bool(self.preserve_structure.get()) and input_root is not None
         expected = estimate_output_count(len(tasks), grid_mode)
         if expected is None:
-            self.status.set(f"开始处理… 共 {len(tasks)} 个输入，自动判断网格。")
+            self.status.set(f"开始处理... 共 {len(tasks)} 张图片，自动识别拆分方式。")
         else:
-            self.status.set(f"开始处理… 共 {len(tasks)} 个输入，预计输出 {expected} 张切片。")
-        self._log(f"▶ 开始拆分：共 {len(tasks)} 个输入")
+            self.status.set(f"开始处理... 共 {len(tasks)} 张图片，预计生成 {expected} 张小图。")
+        self._log(f"开始处理：共 {len(tasks)} 张图片。")
         self._log(format_output_preview(tasks, Path(outdir), input_root, preserve_structure, out_mode))
 
         t = threading.Thread(
@@ -816,11 +817,11 @@ class App(tk.Tk):
                         output_count += 1
 
                 ok += 1
-                self._ui_progress(idx, f"✅ {img_path.name} -> {g}x{g} 完成")
+                self._ui_progress(idx, f"{img_path.name} 已完成，拆分为 {g}×{g}")
             except Exception as e:
                 fail += 1
                 failures.append((img_path.name, str(e)))
-                self._ui_progress(idx, f"❌ {img_path.name} 失败：{e}")
+                self._ui_progress(idx, f"{img_path.name} 处理失败：{e}")
 
         self._ui_done(ok, fail, output_count, outdir, failures)
 
@@ -842,7 +843,7 @@ class App(tk.Tk):
 
     def delete_images_ui(self):
         win = tk.Toplevel(self)
-        win.title("删除图片（列表左 / 预览右）")
+        win.title("清理图片")
         win.geometry("1080x620")
         win.minsize(980, 560)
 
@@ -855,28 +856,28 @@ class App(tk.Tk):
         top = ttk.Frame(win, padding=10)
         top.pack(fill="x")
 
-        ttk.Label(top, text="目标目录：").pack(side="left")
+        ttk.Label(top, text="清理位置：").pack(side="left")
         ent = ttk.Entry(top, textvariable=dir_var)
         ent.pack(side="left", fill="x", expand=True, padx=(6, 6))
 
         def pick_dir():
-            p = filedialog.askdirectory(title="选择要删除图片的目录", initialdir=dir_var.get())
+            p = filedialog.askdirectory(title="选择要清理的文件夹", initialdir=dir_var.get())
             if p:
                 dir_var.set(p)
                 refresh_list()
 
         ttk.Button(top, text="选择…", command=pick_dir, width=10).pack(side="left")
 
-        ttk.Checkbutton(top, text="递归包含子目录", variable=recursive_var,
+        ttk.Checkbutton(top, text="包含子文件夹", variable=recursive_var,
                         command=lambda: refresh_list()).pack(side="left", padx=10)
 
-        trash_cb = ttk.Checkbutton(top, text="进回收站（更安全）", variable=use_trash_var)
+        trash_cb = ttk.Checkbutton(top, text="删除到回收站（更安全）", variable=use_trash_var)
         trash_cb.pack(side="left", padx=10)
 
         ttk.Button(top, text="刷新", command=lambda: refresh_list(), width=8).pack(side="left", padx=(6, 0))
 
         if use_trash_var.get() and not HAS_SEND2TRASH:
-            self._log("[删除面板] ⚠️ 未检测到 send2trash：请 pip install send2trash，否则无法进回收站。")
+            self._log("[清理图片] 未检测到 send2trash：请 pip install send2trash，否则无法删除到回收站。")
 
         mid = ttk.Frame(win, padding=10)
         mid.pack(fill="both", expand=True)
@@ -884,7 +885,7 @@ class App(tk.Tk):
         mid.columnconfigure(1, weight=2)
         mid.rowconfigure(0, weight=1)
 
-        left = ttk.LabelFrame(mid, text="图片列表（支持多选：Ctrl/Shift）", padding=8)
+        left = ttk.LabelFrame(mid, text="图片列表（可按 Ctrl 或 Shift 多选）", padding=8)
         left.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
         left.rowconfigure(0, weight=1)
         left.columnconfigure(0, weight=1)
@@ -907,19 +908,19 @@ class App(tk.Tk):
         canvas = tk.Canvas(right, bg="#f7f7f7", highlightthickness=1, highlightbackground="#ddd")
         canvas.grid(row=0, column=0, sticky="nsew")
 
-        info_var = tk.StringVar(value="未选择图片")
+        info_var = tk.StringVar(value="请选择一张图片")
         info_label = ttk.Label(right, textvariable=info_var, style="InfoMuted.TLabel", wraplength=360, justify="left")
         info_label.grid(row=1, column=0, sticky="ew", pady=(8, 0))
 
         def log(msg: str):
-            self._log(f"[删除面板] {msg}")
+            self._log(f"[清理图片] {msg}")
 
         def render_empty_hint():
             canvas.delete("all")
             cw = max(1, canvas.winfo_width())
             ch = max(1, canvas.winfo_height())
-            canvas.create_text(cw // 2, ch // 2, text="请选择左侧图片以预览", fill="#888", font=("Segoe UI", 11))
-            info_var.set("未选择图片")
+            canvas.create_text(cw // 2, ch // 2, text="请选择左侧图片查看预览", fill="#888", font=("Segoe UI", 11))
+            info_var.set("请选择一张图片")
 
         def refresh_list():
             target = Path(dir_var.get().strip())
@@ -928,7 +929,7 @@ class App(tk.Tk):
             render_empty_hint()
             self.apply_theme()
             if not target.exists() or not target.is_dir():
-                log("目录无效")
+                log("文件夹无效")
                 return
 
             if recursive_var.get():
@@ -943,7 +944,7 @@ class App(tk.Tk):
                 show = str(p.relative_to(target)) if recursive_var.get() else p.name
                 lb.insert("end", show)
 
-            log(f"刷新列表：找到 {len(files)} 张图片")
+            log(f"已刷新：找到 {len(files)} 张图片")
 
         def show_preview(event=None):
             sel = lb.curselection()
@@ -973,7 +974,7 @@ class App(tk.Tk):
                 )
             except Exception as e:
                 canvas.delete("all")
-                info_var.set(f"预览失败：{e}")
+                info_var.set(f"图片预览失败：{e}")
 
         # 预览自适应
         canvas.bind("<Configure>", lambda e: show_preview())
@@ -994,7 +995,7 @@ class App(tk.Tk):
             if use_trash_var.get() and not HAS_SEND2TRASH:
                 messagebox.showerror(
                     "缺少依赖",
-                    "当前选择“进回收站”，但未安装 send2trash。\n\n请执行：pip install send2trash",
+                    "当前选择“删除到回收站”，但未安装 send2trash。\n\n请执行：pip install send2trash",
                     parent=win
                 )
                 return False
@@ -1004,8 +1005,8 @@ class App(tk.Tk):
             if not needs_typed_delete_confirmation(file_count):
                 return True
             answer = simpledialog.askstring(
-                "大量删除确认",
-                f"将删除 {file_count} 张图片。为避免误删，请输入 {DELETE_CONFIRM_TEXT} 继续。",
+                "确认清理多张图片",
+                f"将清理 {file_count} 张图片。为避免误删，请输入 {DELETE_CONFIRM_TEXT} 继续。",
                 parent=win,
             )
             return answer == DELETE_CONFIRM_TEXT
@@ -1013,50 +1014,50 @@ class App(tk.Tk):
         def delete_selected():
             sel = list(lb.curselection())
             if not sel:
-                messagebox.showwarning("提示", "请先在列表中选择要删除的图片。", parent=win)
+                messagebox.showwarning("请选择图片", "请先在列表中选择要清理的图片。", parent=win)
                 return
             if not _ensure_send2trash_if_needed():
                 return
 
             target = Path(dir_var.get().strip())
             if is_dangerous_delete_target(target):
-                messagebox.showerror("危险目录", "为避免误删，不能在磁盘根目录或用户主目录执行删除。", parent=win)
+                messagebox.showerror("不能清理这个位置", "为避免误删，不能在磁盘根目录或用户主目录清理图片。", parent=win)
                 return
             tip = "递归" if recursive_var.get() else "当前目录"
-            mode = "回收站" if use_trash_var.get() else "永久删除"
+            mode = "删除到回收站" if use_trash_var.get() else "永久删除"
             preview = "\n".join(str(self._del_list_paths[i].name) for i in sel[:5] if 0 <= i < len(self._del_list_paths))
             if len(sel) > 5:
                 preview += f"\n... 另有 {len(sel) - 5} 张"
             ok = messagebox.askyesno(
-                "确认删除选中",
-                f"将删除选中的 {len(sel)} 张图片（{tip} / {mode}）：\n\n{preview}\n\n目录：{target.resolve()}",
+                "确认清理选中图片",
+                f"将清理选中的 {len(sel)} 张图片（{tip} / {mode}）：\n\n{preview}\n\n位置：{target.resolve()}",
                 parent=win
             )
             if not ok:
                 return
             if not _confirm_large_delete(len(sel)):
-                messagebox.showinfo("已取消", "未输入正确确认文本，删除已取消。", parent=win)
+                messagebox.showinfo("已取消", "未输入正确确认文本，清理已取消。", parent=win)
                 return
 
             paths = [self._del_list_paths[i] for i in sel if 0 <= i < len(self._del_list_paths)]
             deleted = delete_files(paths, use_trash=use_trash_var.get())
-            log(f"删除选中：{deleted} 张（{mode}）")
+            log(f"已清理选中图片：{deleted} 张（{mode}）")
             refresh_list()
 
         def delete_all():
             target = Path(dir_var.get().strip())
             if not target.exists() or not target.is_dir():
-                messagebox.showerror("错误", "目录无效。", parent=win)
+                messagebox.showerror("文件夹无效", "请选择一个有效的文件夹。", parent=win)
                 return
             if is_dangerous_delete_target(target):
-                messagebox.showerror("危险目录", "为避免误删，不能在磁盘根目录或用户主目录执行删除全部。", parent=win)
+                messagebox.showerror("不能清理这个位置", "为避免误删，不能在磁盘根目录或用户主目录清理全部图片。", parent=win)
                 return
             if not _ensure_send2trash_if_needed():
                 return
 
             count = len(self._del_list_paths)
             if count == 0:
-                messagebox.showinfo("提示", "该目录下没有可删除的图片。", parent=win)
+                messagebox.showinfo("没有可清理的图片", "这个文件夹里没有可清理的图片。", parent=win)
                 return
 
             tip = "递归" if recursive_var.get() else "当前目录"
@@ -1065,18 +1066,18 @@ class App(tk.Tk):
             if count > 5:
                 preview += f"\n... 另有 {count - 5} 张"
             ok = messagebox.askyesno(
-                "确认删除全部",
-                f"将删除该目录下全部图片：{count} 张（{tip} / {mode}）\n\n{preview}\n\n目录：{target.resolve()}",
+                "确认清理全部图片",
+                f"将清理该位置下全部图片：{count} 张（{tip} / {mode}）\n\n{preview}\n\n位置：{target.resolve()}",
                 parent=win
             )
             if not ok:
                 return
             if not _confirm_large_delete(count):
-                messagebox.showinfo("已取消", "未输入正确确认文本，删除已取消。", parent=win)
+                messagebox.showinfo("已取消", "未输入正确确认文本，清理已取消。", parent=win)
                 return
 
             deleted = delete_images_in_dir(target, recursive_var.get(), use_trash=use_trash_var.get())
-            log(f"删除全部：{deleted} 张（{mode}）")
+            log(f"已清理全部图片：{deleted} 张（{mode}）")
             refresh_list()
 
         ttk.Button(bottom, text="全选", command=select_all, width=10).pack(side="left")
@@ -1084,8 +1085,8 @@ class App(tk.Tk):
 
         right_btns = ttk.Frame(bottom)
         right_btns.pack(side="right")
-        ttk.Button(right_btns, text="删除选中", command=delete_selected, width=12).pack(side="left", padx=8)
-        ttk.Button(right_btns, text="删除全部", command=delete_all, width=12).pack(side="left")
+        ttk.Button(right_btns, text="清理选中", command=delete_selected, width=12).pack(side="left", padx=8)
+        ttk.Button(right_btns, text="清理全部", command=delete_all, width=12).pack(side="left")
 
         refresh_list()
 

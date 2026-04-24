@@ -59,9 +59,10 @@ def test_worker_split_accepts_config_snapshot():
     assert "args=(tasks, outdir, grid_mode, out_mode, input_root, preserve_structure)" in source
 
 
-def test_output_format_copy_mentions_jpg_reencoding():
+def test_output_format_copy_recommends_png_and_keep_original():
     source = (ROOT / "gui_splitter_plus.py").read_text(encoding="utf-8")
-    assert "JPG会重新编码" in source or "JPG 会重新编码" in source
+    assert "建议选择 PNG" in source
+    assert "保持原格式" in source
 
 
 def test_experimental_shot_table_version_is_archived():
