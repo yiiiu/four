@@ -495,18 +495,34 @@ class App(tk.Tk):
         indicator_fg = "#FFFFFF"
         empty_fg = pal["muted"]
 
-        for style_name in (
-            "Check.TRadiobutton",
-            "Check.TCheckbutton",
-        ):
+        layouts = (
+            (
+                "Check.TRadiobutton",
+                "Radiobutton.indicator",
+                "Radiobutton.focus",
+                "Radiobutton.label",
+            ),
+            (
+                "Check.TCheckbutton",
+                "Checkbutton.indicator",
+                "Checkbutton.focus",
+                "Checkbutton.label",
+            ),
+        )
+
+        for style_name, indicator_element, focus_element, label_element in layouts:
             style.layout(
                 style_name,
                 [
-                    ("CheckButton.padding", {
+                    ("Checkbutton.padding", {
                         "sticky": "nswe",
                         "children": [
-                            ("CheckButton.indicator", {"side": "left", "sticky": "w"}),
-                            ("CheckButton.label", {"side": "left", "sticky": "w"}),
+                            (indicator_element, {"side": "left", "sticky": ""}),
+                            (focus_element, {
+                                "side": "left",
+                                "sticky": "w",
+                                "children": [(label_element, {"sticky": "nswe"})],
+                            }),
                         ],
                     }),
                 ],
@@ -541,7 +557,7 @@ class App(tk.Tk):
                     ("!selected", empty_fg),
                 ],
             )
-            style.configure(style_name, checkmark="✅")
+            style.configure(style_name, checkmark="√")
 
     def _apply_theme_recursive(self, widget, pal):
         """递归应用到 tk 控件（Canvas/Text/Listbox/Button 等）"""
