@@ -23,3 +23,12 @@ def test_readme_points_users_to_main_entrypoint():
 
     assert "python main.py" in readme
     assert "python gui_splitter_plus.py" not in readme
+
+
+def test_legacy_entrypoints_are_archived_outside_project_root():
+    legacy_dir = ROOT / "legacy"
+
+    assert not (ROOT / "grid_splitter_gui.py").exists()
+    assert not (ROOT / "gui_splitter.py").exists()
+    assert (legacy_dir / "grid_splitter_gui.py").exists()
+    assert (legacy_dir / "gui_splitter.py").exists()

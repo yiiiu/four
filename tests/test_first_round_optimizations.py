@@ -28,7 +28,7 @@ def test_dangerous_delete_targets_are_rejected():
 
 
 def test_gui_splitter_does_not_pass_invalid_combobox_option():
-    tree = ast.parse((ROOT / "gui_splitter.py").read_text(encoding="utf-8"))
+    tree = ast.parse((ROOT / "legacy" / "gui_splitter.py").read_text(encoding="utf-8"))
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
             for keyword in node.keywords:
