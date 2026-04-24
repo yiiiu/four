@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from file_ops import estimate_output_count, is_dangerous_delete_target, open_folder
+from file_ops import estimate_output_count, get_output_dir_for_image, is_dangerous_delete_target, open_folder
 from image_splitter import guess_grid_by_ratio, is_image_file, make_unique_stem, split_equal_grid
 
 
@@ -46,3 +46,22 @@ def test_file_ops_keep_folder_and_delete_safety_behaviour(tmp_path):
     assert estimate_output_count(2, "auto") is None
     assert is_dangerous_delete_target(Path.home()) is True
     assert is_dangerous_delete_target(target) is False
+
+
+def test_output_dir_planning_preserves_relative_folder_for_batch_input(tmp_path):
+    input_root = tmp_path / "input"
+    image_path = input_root / "chapter-a" / "scene-01" / "grid.png"
+    output_root = tmp_path / "output"
+
+    flat_dir = get_output_dir_for_image(image_path, output_root, input_root, preserve_structure=False)
+    nested_dir = get_output_dir_for_image(image_path, output_root, input_root, preserve_structure=True)
+
+    assert flat_dir == output_root
+    assert nested_dir == output_root / "chapter-a" / "scene-01"
+
+
+def test_output_dir_planning_ignores_structure_for_single_file(tmp_path):
+    image_path = tmp_path / "grid.png"
+    output_root = tmp_path / "output"
+
+    assert get_output_dir_for_image(image_path, output_root, None, preserve_structure=True) == output_root

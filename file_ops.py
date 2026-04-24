@@ -34,6 +34,23 @@ def estimate_output_count(input_count: int, grid_mode: str) -> int | None:
     return None
 
 
+def get_output_dir_for_image(
+    image_path: Path,
+    output_root: Path,
+    input_root: Path | None,
+    preserve_structure: bool,
+) -> Path:
+    if not preserve_structure or input_root is None:
+        return output_root
+
+    try:
+        relative_parent = image_path.parent.resolve().relative_to(input_root.resolve())
+    except ValueError:
+        return output_root
+
+    return output_root / relative_parent
+
+
 def is_dangerous_delete_target(target_dir: Path) -> bool:
     try:
         target = target_dir.expanduser().resolve()

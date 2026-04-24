@@ -11,6 +11,7 @@ from file_ops import (
     delete_files,
     delete_images_in_dir,
     estimate_output_count,
+    get_output_dir_for_image,
     is_dangerous_delete_target,
     open_folder,
 )
@@ -47,6 +48,7 @@ class App(tk.Tk):
         self.grid_mode = tk.StringVar(value="auto")  # auto | 2 | 3
         self.out_format = tk.StringVar(value="png")  # png | webp | keep
         self.delete_recursive = tk.BooleanVar(value=False)
+        self.preserve_structure = tk.BooleanVar(value=False)
 
         # ✅ 网格线可调
         self.grid_line_width = tk.IntVar(value=2)
@@ -133,6 +135,7 @@ class App(tk.Tk):
         out_row.columnconfigure(0, weight=1)
         ttk.Entry(out_row, textvariable=self.outdir).grid(row=0, column=0, sticky="ew")
         ttk.Button(out_row, text="选择…", command=self.pick_outdir, width=10).grid(row=0, column=1, padx=(8, 0))
+        ttk.Checkbutton(lf_out, text="批量输出保留子目录结构", variable=self.preserve_structure).grid(row=2, column=0, sticky="w", pady=(8, 0))
 
         lf_opts = ttk.LabelFrame(left, text="参数", padding=10)
         lf_opts.grid(row=2, column=0, sticky="ew", pady=(0, 10))
@@ -725,6 +728,7 @@ class App(tk.Tk):
             return
 
         tasks: list[Path] = []
+        input_root: Path | None = None
         if self.input_type.get() == "single":
             p = Path(in_path)
             if not p.exists() or not p.is_file() or not is_image_file(p):
@@ -740,11 +744,13 @@ class App(tk.Tk):
             if not tasks:
                 messagebox.showerror("错误", "文件夹内没有找到支持的图片。")
                 return
+            input_root = folder
 
         self.pbar["value"] = 0
         self.pbar["maximum"] = len(tasks)
         grid_mode = self.grid_mode.get()
         out_mode = self.out_format.get().lower()
+        preserve_structure = bool(self.preserve_structure.get()) and input_root is not None
         expected = estimate_output_count(len(tasks), grid_mode)
         if expected is None:
             self.status.set(f"开始处理… 共 {len(tasks)} 个输入，自动判断网格。")
@@ -752,10 +758,22 @@ class App(tk.Tk):
             self.status.set(f"开始处理… 共 {len(tasks)} 个输入，预计输出 {expected} 张切片。")
         self._log(f"▶ 开始拆分：共 {len(tasks)} 个输入")
 
-        t = threading.Thread(target=self._worker_split, args=(tasks, outdir, grid_mode, out_mode), daemon=True)
+        t = threading.Thread(
+            target=self._worker_split,
+            args=(tasks, outdir, grid_mode, out_mode, input_root, preserve_structure),
+            daemon=True,
+        )
         t.start()
 
-    def _worker_split(self, tasks: list[Path], outdir: str, grid_mode: str, out_mode: str):
+    def _worker_split(
+        self,
+        tasks: list[Path],
+        outdir: str,
+        grid_mode: str,
+        out_mode: str,
+        input_root: Path | None,
+        preserve_structure: bool,
+    ):
         ok = 0
         fail = 0
         out_dir_path = Path(outdir)
@@ -773,6 +791,7 @@ class App(tk.Tk):
 
                     base = img_path.stem
                     src_ext = img_path.suffix
+                    output_dir = get_output_dir_for_image(img_path, out_dir_path, input_root, preserve_structure)
                     for (r, c), tile in crops:
                         raw_stem = f"{base}_r{r+1}_c{c+1}"
 
@@ -785,8 +804,8 @@ class App(tk.Tk):
                         else:
                             ext = ".webp"
 
-                        unique_stem = make_unique_stem(out_dir_path, raw_stem, ext)
-                        save_tile(tile, out_dir_path / unique_stem, out_mode, src_ext)
+                        unique_stem = make_unique_stem(output_dir, raw_stem, ext)
+                        save_tile(tile, output_dir / unique_stem, out_mode, src_ext)
 
                 ok += 1
                 self._ui_progress(idx, f"✅ {img_path.name} -> {g}x{g} 完成")

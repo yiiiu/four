@@ -54,8 +54,9 @@ def test_estimate_output_count_uses_grid_mode():
 
 def test_worker_split_accepts_config_snapshot():
     source = (ROOT / "gui_splitter_plus.py").read_text(encoding="utf-8")
-    assert "def _worker_split(self, tasks: list[Path], outdir: str, grid_mode: str, out_mode: str):" in source
-    assert "args=(tasks, outdir, grid_mode, out_mode)" in source
+    assert "grid_mode = self.grid_mode.get()" in source
+    assert "out_mode = self.out_format.get().lower()" in source
+    assert "args=(tasks, outdir, grid_mode, out_mode, input_root, preserve_structure)" in source
 
 
 def test_output_format_copy_mentions_jpg_reencoding():
