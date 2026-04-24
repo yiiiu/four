@@ -495,38 +495,10 @@ class App(tk.Tk):
         indicator_fg = "#FFFFFF"
         empty_fg = pal["muted"]
 
-        layouts = (
-            (
-                "Check.TRadiobutton",
-                "Radiobutton.indicator",
-                "Radiobutton.focus",
-                "Radiobutton.label",
-            ),
-            (
-                "Check.TCheckbutton",
-                "Checkbutton.indicator",
-                "Checkbutton.focus",
-                "Checkbutton.label",
-            ),
-        )
-
-        for style_name, indicator_element, focus_element, label_element in layouts:
-            style.layout(
-                style_name,
-                [
-                    ("Checkbutton.padding", {
-                        "sticky": "nswe",
-                        "children": [
-                            (indicator_element, {"side": "left", "sticky": ""}),
-                            (focus_element, {
-                                "side": "left",
-                                "sticky": "w",
-                                "children": [(label_element, {"sticky": "nswe"})],
-                            }),
-                        ],
-                    }),
-                ],
-            )
+        for style_name in (
+            "Check.TRadiobutton",
+            "Check.TCheckbutton",
+        ):
             style.configure(
                 style_name,
                 background=pal["bg"],

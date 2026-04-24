@@ -84,9 +84,13 @@ def test_check_indicator_style_does_not_pass_style_keyword_to_configure():
 
 def test_check_indicator_styles_keep_native_indicator_elements():
     source = (ROOT / "gui_splitter_plus.py").read_text(encoding="utf-8")
-    assert "Radiobutton.indicator" in source
-    assert "Checkbutton.indicator" in source
     assert "CheckButton.indicator" not in source
+    assert "CheckButton.label" not in source
+
+
+def test_check_indicator_styles_do_not_replace_native_layout():
+    source = (ROOT / "gui_splitter_plus.py").read_text(encoding="utf-8")
+    assert "style.layout(\n                style_name" not in source
 
 
 def test_experimental_shot_table_version_is_archived():
