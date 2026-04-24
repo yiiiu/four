@@ -1,5 +1,3 @@
-import os
-import sys
 import threading
 from pathlib import Path
 
@@ -8,150 +6,26 @@ from tkinter import ttk, filedialog, messagebox, colorchooser
 
 from PIL import Image, ImageTk
 
-# 可选：进回收站
-try:
-    from send2trash import send2trash
-    HAS_SEND2TRASH = True
-except Exception:
-    HAS_SEND2TRASH = False
+from file_ops import (
+    HAS_SEND2TRASH,
+    delete_files,
+    delete_images_in_dir,
+    estimate_output_count,
+    is_dangerous_delete_target,
+    open_folder,
+)
+from image_splitter import (
+    guess_grid_by_ratio,
+    is_image_file,
+    make_unique_stem,
+    save_tile,
+    split_equal_grid,
+)
 
 
 # ------------------------
 # Config / Helpers
 # ------------------------
-
-IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".jfif"}
-
-
-def is_image_file(p: Path) -> bool:
-    return p.suffix.lower() in IMAGE_EXTS
-
-
-def guess_grid_by_ratio(w: int, h: int) -> int:
-    ratio = w / h if h else 1.0
-    if 0.45 <= ratio <= 0.70:
-        return 2
-    if 0.80 <= ratio <= 1.25:
-        return 3
-    return 2
-
-
-def split_equal_grid(img: Image.Image, rows: int, cols: int):
-    """
-    平衡切割：使用 round(i*w/cols) 的边界，避免余数像素全堆到最后导致 1~2px 偏移。
-    """
-    w, h = img.size
-    xs = [round(i * w / cols) for i in range(cols + 1)]
-    ys = [round(i * h / rows) for i in range(rows + 1)]
-
-    crops = []
-    for r in range(rows):
-        for c in range(cols):
-            left, right = xs[c], xs[c + 1]
-            top, bottom = ys[r], ys[r + 1]
-            crops.append(((r, c), img.crop((left, top, right, bottom))))
-    return crops
-
-
-
-def open_folder(path: str, launch: bool = True):
-    try:
-        target = Path(path)
-        target.mkdir(parents=True, exist_ok=True)
-        if not launch:
-            return
-        if sys.platform.startswith("win"):
-            os.startfile(str(target))  # type: ignore
-        elif sys.platform.startswith("darwin"):
-            os.system(f'open "{target}"')
-        else:
-            os.system(f'xdg-open "{target}"')
-    except Exception:
-        pass
-
-
-def estimate_output_count(input_count: int, grid_mode: str) -> int | None:
-    if grid_mode in ("2", "3"):
-        grid = int(grid_mode)
-        return input_count * grid * grid
-    return None
-
-
-def is_dangerous_delete_target(target_dir: Path) -> bool:
-    try:
-        target = target_dir.expanduser().resolve()
-    except Exception:
-        return True
-
-    home = Path.home().resolve()
-    anchors = {Path(anchor).resolve() for anchor in (target.anchor, home.anchor) if anchor}
-    protected = {home, *anchors}
-    return target in protected
-
-
-def make_unique_stem(outdir: Path, stem: str, ext: str) -> str:
-    ext = ext.lower()
-    candidate = stem
-    i = 1
-    while (outdir / f"{candidate}{ext}").exists():
-        candidate = f"{stem}_{i:03d}"
-        i += 1
-    return candidate
-
-
-def save_tile(tile: Image.Image, out_path_no_ext: Path, out_mode: str, src_ext: str):
-    out_path_no_ext.parent.mkdir(parents=True, exist_ok=True)
-
-    if out_mode == "keep":
-        ext = src_ext.lower().lstrip(".")
-        if ext in ("jpg", "jpeg"):
-            tile.save(out_path_no_ext.with_suffix("." + ext), format="JPEG", quality=100, subsampling=0)
-        elif ext == "webp":
-            tile.save(out_path_no_ext.with_suffix(".webp"), format="WEBP", lossless=True, quality=100)
-        elif ext == "png":
-            tile.save(out_path_no_ext.with_suffix(".png"), format="PNG", optimize=False)
-        else:
-            tile.save(out_path_no_ext.with_suffix(".png"), format="PNG", optimize=False)
-        return
-
-    if out_mode == "png":
-        tile.save(out_path_no_ext.with_suffix(".png"), format="PNG", optimize=False)
-        return
-
-    if out_mode == "webp":
-        tile.save(out_path_no_ext.with_suffix(".webp"), format="WEBP", lossless=True, quality=100)
-        return
-
-    tile.save(out_path_no_ext.with_suffix(".png"), format="PNG", optimize=False)
-
-
-def delete_files(paths: list[Path], use_trash: bool) -> int:
-    deleted = 0
-    for p in paths:
-        try:
-            if use_trash:
-                if not HAS_SEND2TRASH:
-                    raise RuntimeError("未安装 send2trash")
-                send2trash(str(p))
-            else:
-                p.unlink()
-            deleted += 1
-        except Exception:
-            pass
-    return deleted
-
-
-def delete_images_in_dir(target_dir: Path, recursive: bool, use_trash: bool) -> int:
-    if not target_dir.exists() or not target_dir.is_dir():
-        return 0
-
-    if recursive:
-        files = [p for p in target_dir.rglob("*") if p.is_file() and is_image_file(p)]
-    else:
-        files = [p for p in target_dir.iterdir() if p.is_file() and is_image_file(p)]
-
-    return delete_files(files, use_trash=use_trash)
-
 
 # ------------------------
 # App
