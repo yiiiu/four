@@ -4,5 +4,6 @@ __pycache__/
 *.pyc
 output_tiles/
 shots_out/
+docs/
 *.spec.bak
 .pytest_cache/
