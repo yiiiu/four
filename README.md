@@ -1,5 +1,7 @@
 # 四宫格九宫格拆分工具 Pro
 
+多宫格剪切工具。
+
 本项目的正式入口是 `gui_splitter_plus.py`，PyInstaller 打包配置见 `四宫格九宫格拆分工具Pro.spec`。
 
 ## 运行
