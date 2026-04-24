@@ -8,3 +8,4 @@ docs/
 icon-preview.png
 *.spec.bak
 .pytest_cache/
+.worktrees/
