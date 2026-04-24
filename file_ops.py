@@ -50,21 +50,22 @@ def format_split_summary(
     failures: list[tuple[str, str]],
 ) -> tuple[str, str, str]:
     output_dir = outdir.resolve()
-    status = f"完成：成功 {ok}，失败 {fail}，输出 {output_count} 张切片。输出目录：{output_dir}"
+    status = f"完成：成功 {ok} 张，失败 {fail} 张，生成 {output_count} 张小图。保存位置：{output_dir}"
     dialog_lines = [
-        f"成功 {ok}，失败 {fail}",
-        f"输出切片：{output_count} 张",
-        f"输出目录：{output_dir}",
+        f"成功：{ok} 张",
+        f"失败：{fail} 张",
+        f"生成小图：{output_count} 张",
+        f"保存位置：{output_dir}",
     ]
-    log_lines = [f"■ 完成：成功 {ok}，失败 {fail}，输出 {output_count} 张切片"]
+    log_lines = [f"■ 完成：成功 {ok} 张，失败 {fail} 张，生成 {output_count} 张小图"]
 
     if failures:
         shown = failures[:5]
-        dialog_lines.extend(["", "失败文件："])
+        dialog_lines.extend(["", "处理失败的图片："])
         dialog_lines.extend(f"{name}：{error}" for name, error in shown)
         if len(failures) > len(shown):
-            dialog_lines.append(f"... 另有 {len(failures) - len(shown)} 个失败")
-        log_lines.extend(f"失败文件：{name}：{error}" for name, error in shown)
+            dialog_lines.append(f"... 另有 {len(failures) - len(shown)} 张失败")
+        log_lines.extend(f"处理失败：{name}：{error}" for name, error in shown)
 
     return status, "\n".join(dialog_lines), "\n".join(log_lines)
 
@@ -77,7 +78,7 @@ def format_output_preview(
     out_mode: str,
     limit: int = 3,
 ) -> str:
-    lines = ["输出预览："]
+    lines = ["保存预览："]
     shown = tasks[:limit]
 
     for image_path in shown:
@@ -98,13 +99,13 @@ def format_output_preview(
             ext = ".jpg"
 
         lines.extend([
-            f"输入：{input_label}",
-            f"目录：{output_dir.resolve()}",
-            f"示例：{image_path.stem}_r1_c1{ext}",
+            f"图片：{input_label}",
+            f"将保存到：{output_dir.resolve()}",
+            f"示例文件：{image_path.stem}_r1_c1{ext}",
         ])
 
     if len(tasks) > len(shown):
-        lines.append(f"... 另有 {len(tasks) - len(shown)} 个输入")
+        lines.append(f"... 另有 {len(tasks) - len(shown)} 张图片")
 
     return "\n".join(lines)
 

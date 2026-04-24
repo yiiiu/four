@@ -93,14 +93,12 @@ def test_split_summary_without_failures(tmp_path):
         failures=[],
     )
 
-    assert "成功 2" in status
-    assert "失败 0" in status
-    assert "输出 18 张切片" in status
+    assert "完成：成功 2 张，失败 0 张，生成 18 张小图" in status
     assert str((tmp_path / "output").resolve()) in status
-    assert "成功 2" in dialog
-    assert "输出切片：18 张" in dialog
-    assert "失败文件" not in dialog
-    assert log == "■ 完成：成功 2，失败 0，输出 18 张切片"
+    assert "成功：2 张" in dialog
+    assert "生成小图：18 张" in dialog
+    assert "失败图片" not in dialog
+    assert log == "■ 完成：成功 2 张，失败 0 张，生成 18 张小图"
 
 
 def test_split_summary_lists_failures(tmp_path):
@@ -114,12 +112,12 @@ def test_split_summary_lists_failures(tmp_path):
         failures=failures,
     )
 
-    assert "失败文件：" in dialog
+    assert "处理失败的图片：" in dialog
     assert "bad-1.jpg：错误 1" in dialog
     assert "bad-5.jpg：错误 5" in dialog
     assert "bad-6.jpg" not in dialog
-    assert "另有 1 个失败" in dialog
-    assert "失败文件：bad-1.jpg：错误 1" in log
+    assert "另有 1 张失败" in dialog
+    assert "处理失败：bad-1.jpg：错误 1" in log
 
 
 def test_output_preview_single_image_uses_output_root(tmp_path):
@@ -134,10 +132,10 @@ def test_output_preview_single_image_uses_output_root(tmp_path):
         out_mode="png",
     )
 
-    assert "输出预览：" in preview
-    assert "输入：grid.png" in preview
-    assert f"目录：{output_root.resolve()}" in preview
-    assert "示例：grid_r1_c1.png" in preview
+    assert "保存预览：" in preview
+    assert "图片：grid.png" in preview
+    assert f"将保存到：{output_root.resolve()}" in preview
+    assert "示例文件：grid_r1_c1.png" in preview
 
 
 def test_output_preview_batch_preserves_relative_folder(tmp_path):
@@ -153,9 +151,9 @@ def test_output_preview_batch_preserves_relative_folder(tmp_path):
         out_mode="keep",
     )
 
-    assert "输入：chapter-a\\scene-01\\grid.jpg" in preview
-    assert f"目录：{(output_root / 'chapter-a' / 'scene-01').resolve()}" in preview
-    assert "示例：grid_r1_c1.jpg" in preview
+    assert "图片：chapter-a\\scene-01\\grid.jpg" in preview
+    assert f"将保存到：{(output_root / 'chapter-a' / 'scene-01').resolve()}" in preview
+    assert "示例文件：grid_r1_c1.jpg" in preview
 
 
 def test_output_preview_limits_batch_examples(tmp_path):
@@ -175,5 +173,5 @@ def test_output_preview_limits_batch_examples(tmp_path):
     assert "grid-0.png" in preview
     assert "grid-2.png" in preview
     assert "grid-3.png" not in preview
-    assert "... 另有 2 个输入" in preview
-    assert "示例：grid-0_r1_c1.webp" in preview
+    assert "... 另有 2 张图片" in preview
+    assert "示例文件：grid-0_r1_c1.webp" in preview
