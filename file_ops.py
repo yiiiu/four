@@ -69,6 +69,46 @@ def format_split_summary(
     return status, "\n".join(dialog_lines), "\n".join(log_lines)
 
 
+def format_output_preview(
+    tasks: list[Path],
+    output_root: Path,
+    input_root: Path | None,
+    preserve_structure: bool,
+    out_mode: str,
+    limit: int = 3,
+) -> str:
+    lines = ["输出预览："]
+    shown = tasks[:limit]
+
+    for image_path in shown:
+        output_dir = get_output_dir_for_image(image_path, output_root, input_root, preserve_structure)
+        input_label = image_path.name
+        if input_root is not None:
+            try:
+                input_label = str(image_path.relative_to(input_root))
+            except ValueError:
+                input_label = image_path.name
+
+        ext = image_path.suffix.lower()
+        if out_mode == "png":
+            ext = ".png"
+        elif out_mode == "webp":
+            ext = ".webp"
+        elif ext == ".jpeg":
+            ext = ".jpg"
+
+        lines.extend([
+            f"输入：{input_label}",
+            f"目录：{output_dir.resolve()}",
+            f"示例：{image_path.stem}_r1_c1{ext}",
+        ])
+
+    if len(tasks) > len(shown):
+        lines.append(f"... 另有 {len(tasks) - len(shown)} 个输入")
+
+    return "\n".join(lines)
+
+
 def get_output_dir_for_image(
     image_path: Path,
     output_root: Path,

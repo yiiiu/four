@@ -12,6 +12,7 @@ from file_ops import (
     delete_files,
     delete_images_in_dir,
     estimate_output_count,
+    format_output_preview,
     format_split_summary,
     get_output_dir_for_image,
     is_dangerous_delete_target,
@@ -760,6 +761,7 @@ class App(tk.Tk):
         else:
             self.status.set(f"开始处理… 共 {len(tasks)} 个输入，预计输出 {expected} 张切片。")
         self._log(f"▶ 开始拆分：共 {len(tasks)} 个输入")
+        self._log(format_output_preview(tasks, Path(outdir), input_root, preserve_structure, out_mode))
 
         t = threading.Thread(
             target=self._worker_split,

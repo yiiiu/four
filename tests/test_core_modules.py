@@ -6,6 +6,7 @@ from file_ops import (
     DELETE_CONFIRM_THRESHOLD,
     DELETE_CONFIRM_TEXT,
     estimate_output_count,
+    format_output_preview,
     format_split_summary,
     get_output_dir_for_image,
     is_dangerous_delete_target,
@@ -119,3 +120,60 @@ def test_split_summary_lists_failures(tmp_path):
     assert "bad-6.jpg" not in dialog
     assert "另有 1 个失败" in dialog
     assert "失败文件：bad-1.jpg：错误 1" in log
+
+
+def test_output_preview_single_image_uses_output_root(tmp_path):
+    image_path = tmp_path / "grid.png"
+    output_root = tmp_path / "output"
+
+    preview = format_output_preview(
+        tasks=[image_path],
+        output_root=output_root,
+        input_root=None,
+        preserve_structure=False,
+        out_mode="png",
+    )
+
+    assert "输出预览：" in preview
+    assert "输入：grid.png" in preview
+    assert f"目录：{output_root.resolve()}" in preview
+    assert "示例：grid_r1_c1.png" in preview
+
+
+def test_output_preview_batch_preserves_relative_folder(tmp_path):
+    input_root = tmp_path / "input"
+    output_root = tmp_path / "output"
+    image_path = input_root / "chapter-a" / "scene-01" / "grid.jpg"
+
+    preview = format_output_preview(
+        tasks=[image_path],
+        output_root=output_root,
+        input_root=input_root,
+        preserve_structure=True,
+        out_mode="keep",
+    )
+
+    assert "输入：chapter-a\\scene-01\\grid.jpg" in preview
+    assert f"目录：{(output_root / 'chapter-a' / 'scene-01').resolve()}" in preview
+    assert "示例：grid_r1_c1.jpg" in preview
+
+
+def test_output_preview_limits_batch_examples(tmp_path):
+    input_root = tmp_path / "input"
+    output_root = tmp_path / "output"
+    tasks = [input_root / f"grid-{i}.png" for i in range(5)]
+
+    preview = format_output_preview(
+        tasks=tasks,
+        output_root=output_root,
+        input_root=input_root,
+        preserve_structure=False,
+        out_mode="webp",
+        limit=3,
+    )
+
+    assert "grid-0.png" in preview
+    assert "grid-2.png" in preview
+    assert "grid-3.png" not in preview
+    assert "... 另有 2 个输入" in preview
+    assert "示例：grid-0_r1_c1.webp" in preview
