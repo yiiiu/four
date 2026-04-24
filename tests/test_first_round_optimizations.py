@@ -77,6 +77,11 @@ def test_check_and_radio_indicators_use_check_mark():
     assert "Check.TCheckbutton" in source
 
 
+def test_check_indicator_style_does_not_pass_style_keyword_to_configure():
+    source = (ROOT / "gui_splitter_plus.py").read_text(encoding="utf-8")
+    assert "style.configure(style_name, style=" not in source
+
+
 def test_experimental_shot_table_version_is_archived():
     assert not (ROOT / "gui_splitter_plus_copy.py").exists()
     assert (ROOT / "experimental" / "gui_splitter_plus_copy.py").exists()

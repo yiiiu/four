@@ -495,9 +495,9 @@ class App(tk.Tk):
         indicator_fg = "#FFFFFF"
         empty_fg = pal["muted"]
 
-        for style_name, base_style in (
-            ("Check.TRadiobutton", "TRadiobutton"),
-            ("Check.TCheckbutton", "TCheckbutton"),
+        for style_name in (
+            "Check.TRadiobutton",
+            "Check.TCheckbutton",
         ):
             style.layout(
                 style_name,
@@ -541,8 +541,7 @@ class App(tk.Tk):
                     ("!selected", empty_fg),
                 ],
             )
-            # Keep inheritance visible for tests and for Tk versions that fall back to base style settings.
-            style.configure(style_name, style=base_style, checkmark="√")
+            style.configure(style_name, checkmark="✅")
 
     def _apply_theme_recursive(self, widget, pal):
         """递归应用到 tk 控件（Canvas/Text/Listbox/Button 等）"""
