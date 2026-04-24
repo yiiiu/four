@@ -43,7 +43,7 @@ class App(tk.Tk):
         self.geometry("1150x700")
         self.minsize(1050, 650)
         self.use_trash_default = tk.BooleanVar(value=True)
-        self.color_preset = tk.StringVar(value="浅色")
+        self.color_preset = tk.StringVar(value="深色")
 
         # state
         self.input_type = tk.StringVar(value="single")  # single | folder
@@ -117,9 +117,9 @@ class App(tk.Tk):
 
         trow = ttk.Frame(lf_in)
         trow.grid(row=0, column=0, sticky="ew")
-        ttk.Radiobutton(trow, text="单张图片", variable=self.input_type, value="single",
+        ttk.Radiobutton(trow, text="单张图片", variable=self.input_type, value="single", style="Check.TRadiobutton",
                         command=self._sync_input_ui).pack(side="left")
-        ttk.Radiobutton(trow, text="批量处理文件夹", variable=self.input_type, value="folder",
+        ttk.Radiobutton(trow, text="批量处理文件夹", variable=self.input_type, value="folder", style="Check.TRadiobutton",
                         command=self._sync_input_ui).pack(side="left", padx=12)
 
         ttk.Label(lf_in, text="图片或文件夹").grid(row=1, column=0, sticky="w", pady=(10, 4))
@@ -139,7 +139,7 @@ class App(tk.Tk):
         out_row.columnconfigure(0, weight=1)
         ttk.Entry(out_row, textvariable=self.outdir).grid(row=0, column=0, sticky="ew")
         ttk.Button(out_row, text="选择…", command=self.pick_outdir, width=10).grid(row=0, column=1, padx=(8, 0))
-        ttk.Checkbutton(lf_out, text="按原文件夹结构保存", variable=self.preserve_structure).grid(row=2, column=0, sticky="w", pady=(8, 0))
+        ttk.Checkbutton(lf_out, text="按原文件夹结构保存", variable=self.preserve_structure, style="Check.TCheckbutton").grid(row=2, column=0, sticky="w", pady=(8, 0))
 
         lf_opts = ttk.LabelFrame(left, text="拆分设置", padding=10)
         lf_opts.grid(row=2, column=0, sticky="ew", pady=(0, 10))
@@ -148,11 +148,11 @@ class App(tk.Tk):
         ttk.Label(lf_opts, text="拆分方式").grid(row=0, column=0, sticky="w")
         gm = ttk.Frame(lf_opts)
         gm.grid(row=1, column=0, sticky="w", pady=(4, 10))
-        ttk.Radiobutton(gm, text="自动识别", variable=self.grid_mode, value="auto",
+        ttk.Radiobutton(gm, text="自动识别", variable=self.grid_mode, value="auto", style="Check.TRadiobutton",
                         command=self.refresh_preview).pack(side="left")
-        ttk.Radiobutton(gm, text="2×2", variable=self.grid_mode, value="2",
+        ttk.Radiobutton(gm, text="2×2", variable=self.grid_mode, value="2", style="Check.TRadiobutton",
                         command=self.refresh_preview).pack(side="left", padx=12)
-        ttk.Radiobutton(gm, text="3×3", variable=self.grid_mode, value="3",
+        ttk.Radiobutton(gm, text="3×3", variable=self.grid_mode, value="3", style="Check.TRadiobutton",
                         command=self.refresh_preview).pack(side="left")
 
         # ✅ 网格线控制：线宽 + 颜色
@@ -204,7 +204,7 @@ class App(tk.Tk):
         del_row = ttk.Frame(lf_actions)
         del_row.grid(row=1, column=0, sticky="ew", pady=(10, 0))
         ttk.Button(del_row, text="清理图片", command=self.delete_images_ui).pack(side="left")
-        ttk.Checkbutton(del_row, text="包含子文件夹", variable=self.delete_recursive).pack(side="left", padx=10)
+        ttk.Checkbutton(del_row, text="包含子文件夹", variable=self.delete_recursive, style="Check.TCheckbutton").pack(side="left", padx=10)
 
         # progress + status
         self.pbar = ttk.Progressbar(left, mode="determinate",style="Accent.Horizontal.TProgressbar")
@@ -472,6 +472,9 @@ class App(tk.Tk):
                       ("disabled", pal["muted"]),
                       ("!disabled", pal["fg"]),
                   ])
+
+        # 用文本勾选态避开 Windows/clam 主题里选中后显示为 x 的问题。
+        self._configure_check_indicator_styles(style, pal, hover_bg, press_bg)
         style.configure("TProgressbar", background=pal["select_bg"])
 
         style.configure("Info.TLabel", background=pal["panel"], foreground=pal["fg"])
@@ -486,6 +489,60 @@ class App(tk.Tk):
         for w in self.winfo_children():
             if isinstance(w, tk.Toplevel):
                 self._apply_theme_recursive(w, pal)
+
+    def _configure_check_indicator_styles(self, style, pal, hover_bg, press_bg):
+        indicator_bg = pal.get("accent", pal["select_bg"])
+        indicator_fg = "#FFFFFF"
+        empty_fg = pal["muted"]
+
+        for style_name, base_style in (
+            ("Check.TRadiobutton", "TRadiobutton"),
+            ("Check.TCheckbutton", "TCheckbutton"),
+        ):
+            style.layout(
+                style_name,
+                [
+                    ("CheckButton.padding", {
+                        "sticky": "nswe",
+                        "children": [
+                            ("CheckButton.indicator", {"side": "left", "sticky": "w"}),
+                            ("CheckButton.label", {"side": "left", "sticky": "w"}),
+                        ],
+                    }),
+                ],
+            )
+            style.configure(
+                style_name,
+                background=pal["bg"],
+                foreground=pal["fg"],
+                indicatorbackground=pal["panel"],
+                indicatorforeground=empty_fg,
+                indicatormargin=(0, 2, 7, 2),
+                padding=(2, 2),
+            )
+            style.map(
+                style_name,
+                background=[
+                    ("disabled", pal["bg"]),
+                    ("pressed", press_bg),
+                    ("active", hover_bg),
+                    ("!active", pal["bg"]),
+                ],
+                foreground=[
+                    ("disabled", pal["muted"]),
+                    ("!disabled", pal["fg"]),
+                ],
+                indicatorbackground=[
+                    ("selected", indicator_bg),
+                    ("!selected", pal["panel"]),
+                ],
+                indicatorforeground=[
+                    ("selected", indicator_fg),
+                    ("!selected", empty_fg),
+                ],
+            )
+            # Keep inheritance visible for tests and for Tk versions that fall back to base style settings.
+            style.configure(style_name, style=base_style, checkmark="√")
 
     def _apply_theme_recursive(self, widget, pal):
         """递归应用到 tk 控件（Canvas/Text/Listbox/Button 等）"""
@@ -868,10 +925,10 @@ class App(tk.Tk):
 
         ttk.Button(top, text="选择…", command=pick_dir, width=10).pack(side="left")
 
-        ttk.Checkbutton(top, text="包含子文件夹", variable=recursive_var,
+        ttk.Checkbutton(top, text="包含子文件夹", variable=recursive_var, style="Check.TCheckbutton",
                         command=lambda: refresh_list()).pack(side="left", padx=10)
 
-        trash_cb = ttk.Checkbutton(top, text="删除到回收站（更安全）", variable=use_trash_var)
+        trash_cb = ttk.Checkbutton(top, text="删除到回收站（更安全）", variable=use_trash_var, style="Check.TCheckbutton")
         trash_cb.pack(side="left", padx=10)
 
         ttk.Button(top, text="刷新", command=lambda: refresh_list(), width=8).pack(side="left", padx=(6, 0))

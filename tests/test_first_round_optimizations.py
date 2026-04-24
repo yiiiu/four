@@ -65,6 +65,18 @@ def test_output_format_copy_recommends_png_and_keep_original():
     assert "保持原格式" in source
 
 
+def test_gui_defaults_to_dark_theme():
+    source = (ROOT / "gui_splitter_plus.py").read_text(encoding="utf-8")
+    assert 'self.color_preset = tk.StringVar(value="深色")' in source
+
+
+def test_check_and_radio_indicators_use_check_mark():
+    source = (ROOT / "gui_splitter_plus.py").read_text(encoding="utf-8")
+    assert "✅" in source
+    assert "Check.TRadiobutton" in source
+    assert "Check.TCheckbutton" in source
+
+
 def test_experimental_shot_table_version_is_archived():
     assert not (ROOT / "gui_splitter_plus_copy.py").exists()
     assert (ROOT / "experimental" / "gui_splitter_plus_copy.py").exists()
